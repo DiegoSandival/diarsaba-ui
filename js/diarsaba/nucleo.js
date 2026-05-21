@@ -1,5 +1,49 @@
 const diarsaba = new Map();
 
+const DIARSABA_SNAPSHOT_VERSION = 1;
+const DIARSABA_PENDING_SNAPSHOT_STORAGE_KEY = "diarsaba.pendingSnapshot";
+const DIARSABA_PERSISTENCE_MENU_ITEMS = ["guardar json", "cargar json"];
+const DIARSABA_PERSISTENCE_KEYS = new Set([
+    "ensure persistence menu ƒ",
+    "build map snapshot ƒ",
+    "serialize map value ƒ",
+    "hydrate map value ƒ",
+    "hydrate map snapshot ƒ",
+    "revive map function ƒ",
+    "download json file ƒ",
+    "pick json file ƒ",
+    "save map to json ƒ",
+    "load map from json ƒ",
+    "queue map snapshot reload ƒ",
+    "load pending map snapshot ƒ",
+    "refresh map graph ƒ",
+]);
+
+function diarsabaIsPlainObject(value) {
+    if (value === null || typeof value !== "object") {
+        return false;
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+}
+
+function diarsabaIsBrowserRuntimeValue(value) {
+    if (typeof Node !== "undefined" && value instanceof Node) {
+        return true;
+    }
+
+    if (typeof Event !== "undefined" && value instanceof Event) {
+        return true;
+    }
+
+    return value === window || value === document;
+}
+
+function diarsabaReviveFunctionSource(source) {
+    return eval(`(${source.trim()})`);
+}
+
 
         window.addEventListener("DOMContentLoaded", async () => {
 
@@ -60,6 +104,8 @@ const diarsaba = new Map();
                 "$ num",
                 "§ text",
                 "# list",
+                "guardar json",
+                "cargar json",
             ]);
 
             diarsaba.set("list option ~ #", [
@@ -219,8 +265,27 @@ const diarsaba = new Map();
                     diarsaba.get("clear menus ƒ")();
                 } else {
                     const content = event.target.textContent;
+                    const clearMenus = diarsaba.get("clear menus ƒ");
 
                     if (diarsaba.get("atom name list").includes(content)) {
+                        if (content === "guardar json") {
+                            if (typeof clearMenus === "function") {
+                                clearMenus();
+                            }
+
+                            await diarsaba.get("save map to json ƒ")();
+                            return;
+                        }
+
+                        if (content === "cargar json") {
+                            if (typeof clearMenus === "function") {
+                                clearMenus();
+                            }
+
+                            await diarsaba.get("load map from json ƒ")();
+                            return;
+                        }
+
                         if (diarsaba.get("current menu")) {
                             diarsaba.get("current menu").remove();
                         }
@@ -252,6 +317,447 @@ const diarsaba = new Map();
                             //console.log("no exist")
                         }
                     }
+                }
+            });
+
+            diarsaba.set("ensure persistence menu ƒ", () => {
+                const atomNameList = diarsaba.get("atom name list");
+
+                if (!Array.isArray(atomNameList)) {
+                    return;
+                }
+
+                for (const item of DIARSABA_PERSISTENCE_MENU_ITEMS) {
+                    if (!atomNameList.includes(item)) {
+                        atomNameList.push(item);
+                    }
+                }
+            });
+
+            diarsaba.set("revive map function ƒ", (source) => {
+                return diarsabaReviveFunctionSource(source);
+            });
+
+            diarsaba.set("serialize map value ƒ", (value, stack = new WeakSet()) => {
+                if (
+                    value === null ||
+                    typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean"
+                ) {
+                    return { ok: true, value };
+                }
+
+                if (typeof value === "undefined") {
+                    return { ok: true, value: { type: "undefined" } };
+                }
+
+                if (typeof value === "bigint") {
+                    return {
+                        ok: true,
+                        value: { type: "bigint", value: value.toString() }
+                    };
+                }
+
+                if (typeof value === "function") {
+                    return {
+                        ok: true,
+                        value: { type: "function", source: value.toString() }
+                    };
+                }
+
+                if (typeof value === "symbol") {
+                    return { ok: false, reason: "symbol" };
+                }
+
+                if (diarsabaIsBrowserRuntimeValue(value)) {
+                    return { ok: false, reason: "runtime" };
+                }
+
+                if (typeof value !== "object") {
+                    return { ok: false, reason: typeof value };
+                }
+
+                if (stack.has(value)) {
+                    return { ok: false, reason: "cycle" };
+                }
+
+                stack.add(value);
+
+                try {
+                    if (value instanceof Map) {
+                        const entries = [];
+
+                        for (const [entryKey, entryValue] of value.entries()) {
+                            const serializedKey = diarsaba.get("serialize map value ƒ")(
+                                entryKey,
+                                stack
+                            );
+                            const serializedValue = diarsaba.get("serialize map value ƒ")(
+                                entryValue,
+                                stack
+                            );
+
+                            if (!serializedKey.ok) {
+                                return serializedKey;
+                            }
+
+                            if (!serializedValue.ok) {
+                                return serializedValue;
+                            }
+
+                            entries.push([serializedKey.value, serializedValue.value]);
+                        }
+
+                        return { ok: true, value: { type: "map", entries } };
+                    }
+
+                    if (Array.isArray(value)) {
+                        const items = [];
+
+                        for (const item of value) {
+                            const serializedItem = diarsaba.get("serialize map value ƒ")(item, stack);
+
+                            if (!serializedItem.ok) {
+                                return serializedItem;
+                            }
+
+                            items.push(serializedItem.value);
+                        }
+
+                        return { ok: true, value: { type: "array", items } };
+                    }
+
+                    if (diarsabaIsPlainObject(value)) {
+                        const entries = [];
+
+                        for (const [entryKey, entryValue] of Object.entries(value)) {
+                            const serializedValue = diarsaba.get("serialize map value ƒ")(
+                                entryValue,
+                                stack
+                            );
+
+                            if (!serializedValue.ok) {
+                                return serializedValue;
+                            }
+
+                            entries.push([entryKey, serializedValue.value]);
+                        }
+
+                        return { ok: true, value: { type: "object", entries } };
+                    }
+
+                    return { ok: false, reason: "instance" };
+                } finally {
+                    stack.delete(value);
+                }
+            });
+
+            diarsaba.set("hydrate map value ƒ", (value) => {
+                if (
+                    value === null ||
+                    typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean"
+                ) {
+                    return value;
+                }
+
+                if (Array.isArray(value)) {
+                    return value.map((item) => diarsaba.get("hydrate map value ƒ")(item));
+                }
+
+                if (!value || typeof value !== "object") {
+                    return value;
+                }
+
+                if (!Object.prototype.hasOwnProperty.call(value, "type")) {
+                    const objectValue = {};
+
+                    for (const [entryKey, entryValue] of Object.entries(value)) {
+                        objectValue[entryKey] = diarsaba.get("hydrate map value ƒ")(entryValue);
+                    }
+
+                    return objectValue;
+                }
+
+                switch (value.type) {
+                    case "undefined":
+                        return undefined;
+                    case "bigint":
+                        return BigInt(value.value);
+                    case "function":
+                        return diarsaba.get("revive map function ƒ")(value.source);
+                    case "array":
+                        return (value.items || []).map((item) =>
+                            diarsaba.get("hydrate map value ƒ")(item)
+                        );
+                    case "object": {
+                        const objectValue = {};
+
+                        for (const [entryKey, entryValue] of value.entries || []) {
+                            objectValue[entryKey] = diarsaba.get("hydrate map value ƒ")(entryValue);
+                        }
+
+                        return objectValue;
+                    }
+                    case "map": {
+                        const mapValue = new Map();
+
+                        for (const [entryKey, entryValue] of value.entries || []) {
+                            mapValue.set(
+                                diarsaba.get("hydrate map value ƒ")(entryKey),
+                                diarsaba.get("hydrate map value ƒ")(entryValue)
+                            );
+                        }
+
+                        return mapValue;
+                    }
+                    default:
+                        return value;
+                }
+            });
+
+            diarsaba.set("build map snapshot ƒ", () => {
+                diarsaba.get("ensure persistence menu ƒ")();
+
+                const entries = [];
+                const skippedKeys = [];
+
+                for (const [key, value] of diarsaba.entries()) {
+                    if (DIARSABA_PERSISTENCE_KEYS.has(key)) {
+                        continue;
+                    }
+
+                    if (typeof key !== "string") {
+                        skippedKeys.push(String(key));
+                        continue;
+                    }
+
+                    const serializedValue = diarsaba.get("serialize map value ƒ")(value);
+
+                    if (!serializedValue.ok) {
+                        skippedKeys.push(key);
+                        continue;
+                    }
+
+                    entries.push([key, serializedValue.value]);
+                }
+
+                return {
+                    snapshot: {
+                        version: DIARSABA_SNAPSHOT_VERSION,
+                        savedAt: new Date().toISOString(),
+                        entries,
+                    },
+                    skippedKeys,
+                };
+            });
+
+            diarsaba.set("hydrate map snapshot ƒ", (snapshot) => {
+                if (!snapshot || typeof snapshot !== "object" || !Array.isArray(snapshot.entries)) {
+                    throw new Error("Snapshot JSON inválido");
+                }
+
+                const keysToDelete = [];
+
+                for (const [key, value] of diarsaba.entries()) {
+                    if (DIARSABA_PERSISTENCE_KEYS.has(key)) {
+                        continue;
+                    }
+
+                    const serializedValue = diarsaba.get("serialize map value ƒ")(value);
+
+                    if (serializedValue.ok) {
+                        keysToDelete.push(key);
+                    }
+                }
+
+                for (const key of keysToDelete) {
+                    diarsaba.delete(key);
+                }
+
+                for (const entry of snapshot.entries) {
+                    if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== "string") {
+                        continue;
+                    }
+
+                    diarsaba.set(entry[0], diarsaba.get("hydrate map value ƒ")(entry[1]));
+                }
+
+                diarsaba.get("ensure persistence menu ƒ")();
+                diarsaba.get("refresh map graph ƒ")();
+            });
+
+            diarsaba.set("download json file ƒ", (fileName, text) => {
+                const blob = new Blob([text], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+
+                anchor.href = url;
+                anchor.download = fileName;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                URL.revokeObjectURL(url);
+            });
+
+            diarsaba.set("pick json file ƒ", async () => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".json,application/json";
+                input.style.display = "none";
+                document.body.appendChild(input);
+
+                try {
+                    const file = await new Promise((resolve) => {
+                        let settled = false;
+
+                        const finish = (result) => {
+                            if (settled) {
+                                return;
+                            }
+
+                            settled = true;
+                            window.removeEventListener("focus", onFocus, true);
+                            resolve(result);
+                        };
+
+                        const onFocus = () => {
+                            window.setTimeout(() => {
+                                if ((!input.files || input.files.length === 0) && !settled) {
+                                    finish(null);
+                                }
+                            }, 0);
+                        };
+
+                        input.addEventListener(
+                            "change",
+                            () => {
+                                finish(input.files?.[0] || null);
+                            },
+                            { once: true }
+                        );
+                        input.addEventListener(
+                            "cancel",
+                            () => {
+                                finish(null);
+                            },
+                            { once: true }
+                        );
+                        window.addEventListener("focus", onFocus, true);
+                        input.click();
+                    });
+
+                    if (!file) {
+                        return null;
+                    }
+
+                    return JSON.parse(await file.text());
+                } finally {
+                    if (input.isConnected) {
+                        input.remove();
+                    }
+                }
+            });
+
+            diarsaba.set("refresh map graph ƒ", () => {
+                const graph = diarsaba.get("widget card graph");
+                const buildRoot = diarsaba.get("build map graph root ƒ");
+
+                if (!graph || typeof buildRoot !== "function") {
+                    return;
+                }
+
+                const rootNode = buildRoot();
+                diarsaba.set("graph root node", rootNode);
+
+                graph.rootNode = rootNode;
+                graph.currentNode = rootNode;
+                graph.path = [];
+                graph.selectedChildKey = null;
+
+                if (!graph.currentPosition) {
+                    const ensureGraphPosition = diarsaba.get("ensure graph position ƒ");
+
+                    if (typeof ensureGraphPosition === "function") {
+                        ensureGraphPosition(graph);
+                    }
+                } else if (graph.homePosition) {
+                    graph.currentPosition = { ...graph.homePosition };
+                }
+
+                const hydrateGraphNode = diarsaba.get("hydrate graph node ƒ");
+                const renderGraph = diarsaba.get("render graph ƒ");
+                const centerGraphView = diarsaba.get("center graph view ƒ");
+
+                if (typeof hydrateGraphNode === "function") {
+                    hydrateGraphNode(graph.rootNode);
+                }
+
+                if (typeof renderGraph === "function") {
+                    renderGraph(graph);
+                }
+
+                if (typeof centerGraphView === "function" && graph.currentPosition) {
+                    centerGraphView(graph, graph.currentPosition, 1);
+                }
+            });
+
+            diarsaba.set("save map to json ƒ", async () => {
+                const { snapshot, skippedKeys } = diarsaba.get("build map snapshot ƒ")();
+                const fileName = `diarsaba-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+
+                diarsaba.get("download json file ƒ")(
+                    fileName,
+                    JSON.stringify(snapshot, null, 2)
+                );
+
+                if (skippedKeys.length > 0) {
+                    alert(
+                        `Se omitieron ${skippedKeys.length} entradas no serializables:\n\n${skippedKeys.join("\n")}`
+                    );
+                }
+            });
+
+            diarsaba.set("load map from json ƒ", async () => {
+                try {
+                    const snapshot = await diarsaba.get("pick json file ƒ")();
+
+                    if (!snapshot) {
+                        return;
+                    }
+
+                    diarsaba.get("queue map snapshot reload ƒ")(snapshot);
+                } catch (error) {
+                    alert(error?.message || "No se pudo cargar el JSON");
+                }
+            });
+
+            diarsaba.set("queue map snapshot reload ƒ", (snapshot) => {
+                sessionStorage.setItem(
+                    DIARSABA_PENDING_SNAPSHOT_STORAGE_KEY,
+                    JSON.stringify(snapshot)
+                );
+                window.location.reload();
+            });
+
+            diarsaba.set("load pending map snapshot ƒ", () => {
+                const rawSnapshot = sessionStorage.getItem(DIARSABA_PENDING_SNAPSHOT_STORAGE_KEY);
+
+                if (!rawSnapshot) {
+                    return false;
+                }
+
+                sessionStorage.removeItem(DIARSABA_PENDING_SNAPSHOT_STORAGE_KEY);
+
+                try {
+                    const snapshot = JSON.parse(rawSnapshot);
+                    diarsaba.get("hydrate map snapshot ƒ")(snapshot);
+                    return true;
+                } catch (error) {
+                    alert(error?.message || "No se pudo aplicar el JSON cargado");
+                    return false;
                 }
             });
 
@@ -1218,6 +1724,9 @@ const diarsaba = new Map();
                 diarsaba.set("widget card shell", shell);
                 return shell;
             });
+
+            diarsaba.get("ensure persistence menu ƒ")();
+            diarsaba.get("load pending map snapshot ƒ")();
 
             diarsaba.get("on start")();
         });
