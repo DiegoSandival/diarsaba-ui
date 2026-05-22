@@ -1,0 +1,153 @@
+{
+    "on start ƒ": "() => {\n    window.addEventListener(\"contextmenu\", (e) => {\n        e.preventDefault();\n    });\n    window.addEventListener(\"pointerup\", (e) => {\n        diarsaba.set(\"pointer up event\", e);\n        threads(`pointer up ${e.button} ~`);\n    });\n    window.addEventListener(\"wheel\", (e) => {\n        //diarsaba.set(\"wheel event\", e)\n        //threads(`wheel ~`)\n    });\n    window.addEventListener(\"pointerdown\", (e) => {\n        diarsaba.set(\"pointer down event\", e);\n        threads(`pointer down ${e.button} ~`);\n    });\n    window.addEventListener(\"pointermove\", (e) => {\n        diarsaba.set(\"pointer move event\", e);\n        diarsaba.set(\"pointer x\", e.clientX);\n        diarsaba.set(\"pointer y\", e.clientY);\n        //threads(`pointer move ~`)\n    });\n\n    window.addEventListener(\"keydown\", (e) => {\n        // if is input no prevent default\n        if (\n            e.target.tagName === \"INPUT\" ||\n            e.target.tagName === \"TEXTAREA\" ||\n            e.target.isContentEditable\n        ) {\n        } else {\n            //e.preventDefault()\n        }\n\n        //threads(`key down ~`)\n        //threads(`key down ${e.key} ~`)\n    });\n}",
+    "pointer down 0 ~": [],
+    "pointer down 2 ~": [],
+    "pointer up 0 ~": [
+        "handle click !"
+    ],
+    "pointer up 2 ~": [
+        "show context menu !"
+    ],
+    "show context menu !": [
+        "show context menu ƒ"
+    ],
+    "atom name list": [
+        "~ thread",
+        "ƒ func",
+        "! action",
+        "$ num",
+        "§ text",
+        "# list"
+    ],
+    "list option ~ #": [
+        "· * tomar",
+        "· ~ abrir",
+        "· * eliminar",
+        "· * ocultar",
+        "· ~ action"
+    ],
+    "list option ƒ #": [
+        "· * tomar",
+        "· * eliminar",
+        "· ƒ editor",
+        "· * ocultar"
+    ],
+    "list option ! #": [
+        "· * tomar",
+        "· ! abrir",
+        "· * eliminar",
+        "· * ocultar",
+        "· ! action"
+    ],
+    "list option $ #": [
+        "· * tomar",
+        "· $ abrir",
+        "· * eliminar",
+        "· * ocultar"
+    ],
+    "list option § #": [
+        "· * tomar",
+        "· § abrir",
+        "· * eliminar",
+        "· § editor",
+        "· § guardar",
+        "· * ocultar"
+    ],
+    "list option # #": [
+        "· * tomar",
+        "· # abrir",
+        "· * eliminar",
+        "· * ocultar"
+    ],
+    "list option [] #": [
+        "· []* ocultar",
+        "· #* tomar",
+        "· #* padre",
+        "· #* abrir RAM",
+        "· # despues",
+        "· # antes",
+        "· # eliminar"
+    ],
+    "list option ֎ #": [
+        "· ֎* ocultar",
+        "· ֎* padre",
+        "· ֎ editar",
+        "· ֎ guardar",
+        "· ֎ editor"
+    ],
+    "list option ֎ $ #": [
+        "· ֎* ocultar",
+        "· ֎* padre",
+        "· ֎ editar",
+        "· ֎$ guardar",
+        "· ֎ editor"
+    ],
+    "list option ֎ ƒ #": [
+        "· ֎* ocultar",
+        "· ֎* padre",
+        "· ֎ editar",
+        "· ֎ƒ guardar",
+        "· ֎ editor"
+    ],
+    "list option ֎ § #": [
+        "· ֎* ocultar",
+        "· ֎* padre",
+        "· ֎ editar",
+        "· ֎§ guardar",
+        "· ֎ editor"
+    ],
+    "types list #": [
+        "~",
+        "ƒ",
+        "!",
+        "$",
+        "§",
+        "#",
+        "[]",
+        "֎"
+    ],
+    "handle click !": [
+        "handle click ƒ"
+    ],
+    "show context menu ƒ": "() => {\r\n    const event = diarsaba.get(\"pointer up event\");\r\n\r\n    if (event.target.nodeName === \"HTML\" || event.target.nodeName === \"BODY\") {\r\n        if (diarsaba.get(\"current menu\")) {\r\n            diarsaba.get(\"current menu\").remove();\r\n        }\r\n\r\n        diarsaba.set(\r\n            \"current menu\",\r\n            diarsaba.get(\"create list menu ƒ\")(diarsaba.get(\"atom name list\"))\r\n        );\r\n\r\n        diarsaba.set(\"open x $\", event.clientX);\r\n        diarsaba.set(\"open y $\", event.clientY);\r\n    } else {\r\n        const type = event.target.textContent.slice(-1);\r\n        const name = event.target.textContent;\r\n\r\n        diarsaba.get(\"show options list ƒ\")(type, name);\r\n    }\r\n}",
+    "show options list ƒ": "(type, name) => {\r\n    //~ ƒ ! $ § #\r\n\r\n    if (diarsaba.get(\"current chip menu\")) {\r\n        diarsaba.get(\"current chip menu\").remove();\r\n    }\r\n\r\n    if (name.includes(\"[\") && name.includes(\"]\")) {\r\n        const event = diarsaba.get(\"pointer up event\");\r\n        diarsaba.set(\r\n            \"current chip menu\",\r\n            diarsaba.get(\"create list menu ƒ\")(\r\n                diarsaba.get(`list option [] #`),\r\n                event.target.parentElement.dataset.parent,\r\n                name\r\n            )\r\n        );\r\n    } else if (diarsaba.get(\"types list #\").includes(type)) {\r\n        const event = diarsaba.get(\"pointer up event\");\r\n        diarsaba.set(\r\n            \"current chip menu\",\r\n            diarsaba.get(\"create list menu ƒ\")(\r\n                diarsaba.get(`list option ${type} #`),\r\n                name\r\n            )\r\n        );\r\n    } else {\r\n        const event = diarsaba.get(\"pointer up event\");\r\n        type = \"֎\";\r\n        diarsaba.set(\r\n            \"current chip menu\",\r\n            diarsaba.get(\"create list menu ƒ\")(\r\n                diarsaba.get(\r\n                    `list option ${type} ${event.target.dataset.parent.slice(-1)} #`\r\n                ),\r\n                event.target.dataset.parent\r\n            )\r\n        );\r\n    }\r\n}",
+    "handle click ƒ": "async () => {\r\n    const event = diarsaba.get(\"pointer up event\");\r\n\r\n    if (event.target.nodeName === \"HTML\" || event.target.nodeName === \"BODY\") {\r\n        //podriamos ocultar todos los menus\r\n        diarsaba.get(\"clear menus ƒ\")();\r\n    } else {\r\n        const content = event.target.textContent;\r\n\r\n        if (diarsaba.get(\"atom name list\").includes(content)) {\r\n            if (diarsaba.get(\"current menu\")) {\r\n                diarsaba.get(\"current menu\").remove();\r\n            }\r\n\r\n            const name = await diarsaba.get(\"modal input ƒ\")(content.slice(0, 1));\r\n\r\n            if (name != null && name != \"\") {\r\n                diarsaba.get(`create ${event.target.textContent} ƒ`)(name);\r\n\r\n                const chip = diarsaba.get(\"create chip ƒ\")(\r\n                    diarsaba.get(\"open x $\"),\r\n                    diarsaba.get(\"open y $\"),\r\n                    name,\r\n                    \"\",\r\n                    content.slice(0, 1)\r\n                );\r\n                diarsaba.set(`${name} ֎`, chip);\r\n            }\r\n        } else if (name.includes(\"[\") && name.includes(\"]\")) {\r\n        } else {\r\n            //console.log(content, event.target.parentElement.dataset)\r\n            //console.log(content.slice(3))\r\n\r\n            const fun = diarsaba.get(`${content} ƒ`);\r\n            if (fun) {\r\n                diarsaba.get(`${content} ƒ`)(event.target.parentElement.dataset);\r\n                diarsaba.get(\"clear menus ƒ\")();\r\n            } else {\r\n                //console.log(\"no exist\")\r\n            }\r\n        }\r\n    }\r\n}",
+    "· []* ocultar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n}",
+    "· #* padre ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} # ֎`).getBoundingClientRect();\r\n\r\n    const chip = diarsaba.get(\"create chip ƒ\")(\r\n        rect.right,\r\n        rect.top,\r\n        dataset.parent,\r\n        \"\",\r\n        dataset.parent.slice(0, 1)\r\n    );\r\n\r\n    const chip_rect = chip.getBoundingClientRect();\r\n\r\n    chip.style.left = `${rect.left - (chip_rect.width + 10)}px`;\r\n    diarsaba.set(`${dataset.parent} ֎`, chip);\r\n}",
+    "· ֎* padre ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎ ֎`).getBoundingClientRect();\r\n\r\n    const chip = diarsaba.get(\"create chip ƒ\")(\r\n        rect.right,\r\n        rect.top,\r\n        dataset.parent,\r\n        \"\",\r\n        dataset.parent.slice(0, 1)\r\n    );\r\n\r\n    const chip_rect = chip.getBoundingClientRect();\r\n\r\n    chip.style.left = `${rect.left - (chip_rect.width + 10)}px`;\r\n    diarsaba.set(`${dataset.parent} ֎`, chip);\r\n}",
+    "· ! action ƒ": "async (dataset) => {\r\n    threads(`${dataset.parent}`);\r\n}",
+    "· ~ action ƒ": "async (dataset) => {\r\n    threads(`${dataset.parent}`);\r\n}",
+    "· ֎ editar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).contentEditable = true;\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).focus();\r\n}",
+    "· ƒ editor ƒ": "async (dataset) => {\r\n    var initial_code;\r\n\r\n    if (diarsaba.get(dataset.parent) instanceof Function) {\r\n        initial_code = diarsaba.get(dataset.parent).toString();\r\n    } else {\r\n        initial_code = \"()=>{}\";\r\n    }\r\n\r\n    const res = await window.codeEditor.open(\r\n        dataset.parent,\r\n        initial_code,\r\n        \"js\"\r\n    );\r\n\r\n    if (res != null && res != \"\") {\r\n        diarsaba.set(dataset.parent, createFunction(res));\r\n    }\r\n}",
+    "· § editor ƒ": "async (dataset) => {\r\n    const res = await window.codeEditor.open(\r\n        dataset.parent,\r\n        diarsaba.get(dataset.parent) || \"\",\r\n        \"text\"\r\n    );\r\n\r\n    if (res != null && res != \"\") {\r\n        diarsaba.set(dataset.parent, res);\r\n    }\r\n}",
+    "· ֎$ guardar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).contentEditable = false;\r\n    diarsaba.set(\r\n        `${dataset.parent}`,\r\n        Number(diarsaba.get(`${dataset.parent} ֎ ֎`).textContent)\r\n    );\r\n}",
+    "· ֎ƒ guardar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).contentEditable = false;\r\n    diarsaba.set(\r\n        `${dataset.parent}`,\r\n        createFunction(diarsaba.get(`${dataset.parent} ֎ ֎`).textContent)\r\n    );\r\n}",
+    "· ֎§ guardar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).contentEditable = false;\r\n    diarsaba.set(\r\n        `${dataset.parent}`,\r\n        diarsaba.get(`${dataset.parent} ֎ ֎`).textContent\r\n    );\r\n}",
+    "· #* tomar ƒ": "(dataset) => {\r\n    const selection = diarsaba.get(\"obtener index [0] ƒ\")(dataset.current);\r\n    diarsaba.set(\"· * tomar §\", selection.texto);\r\n}",
+    "· # despues ƒ": "(dataset) => {\r\n    const tomado = diarsaba.get(\"· * tomar §\");\r\n    const selection = diarsaba.get(\"obtener index [0] ƒ\")(dataset.current);\r\n    diarsaba.get(dataset.parent).splice(selection.indice + 1, 0, tomado);\r\n\r\n    diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    diarsaba.get(\"· ~ abrir ƒ\")(dataset);\r\n}",
+    "· # antes ƒ": "(dataset) => {\r\n    const tomado = diarsaba.get(\"· * tomar §\");\r\n    const selection = diarsaba.get(\"obtener index [0] ƒ\")(dataset.current);\r\n    diarsaba.get(dataset.parent).splice(selection.indice, 0, tomado);\r\n\r\n    diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    diarsaba.get(\"· ~ abrir ƒ\")(dataset);\r\n}",
+    "· # eliminar ƒ": "(dataset) => {\r\n    const selection = diarsaba.get(\"obtener index [0] ƒ\")(dataset.current);\r\n    diarsaba.get(dataset.parent).splice(selection.indice, 1);\r\n\r\n    diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    diarsaba.get(\"· ~ abrir ƒ\")(dataset);\r\n}",
+    "· * eliminar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    diarsaba.get(`${dataset.parent} ֎`).remove();\r\n    diarsaba.delete(dataset.parent);\r\n    diarsaba.delete(`${dataset.parent} ֎`);\r\n    diarsaba.delete(`${dataset.parent} # ֎`);\r\n}",
+    "obtener index [0] ƒ": "(texto) => {\r\n    const regex = /^\\[(\\d+)\\]\\s*(.*)$/;\r\n    const match = texto.match(regex);\r\n\r\n    if (!match) {\r\n        throw new Error('Formato inválido. Se esperaba: \"[número] texto\"');\r\n    }\r\n\r\n    return {\r\n        indice: parseInt(match[1], 10),\r\n        texto: match[2].trim(),\r\n    };\r\n}",
+    "· * tomar ƒ": "(dataset) => {\r\n    diarsaba.set(\"· * tomar §\", dataset.parent);\r\n}",
+    "· ~ abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const l_div = diarsaba.get(\"create list ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} # ֎`)) {\r\n        diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} # ֎`, l_div);\r\n}",
+    "· $ abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const chip = diarsaba.get(\"create chip ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent,\r\n        \"$\"\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} ֎ ֎`)) {\r\n        diarsaba.get(`${dataset.parent} ֎ ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} ֎ ֎`, chip);\r\n}",
+    "· § abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const chip = diarsaba.get(\"create chip ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent,\r\n        \"§\"\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} ֎ ֎`)) {\r\n        diarsaba.get(`${dataset.parent} ֎ ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} ֎ ֎`, chip);\r\n}",
+    "· # abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const l_div = diarsaba.get(\"create list ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} # ֎`)) {\r\n        diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} # ֎`, l_div);\r\n}",
+    "· ƒ abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const chip = diarsaba.get(\"create chip ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent,\r\n        \"ƒ\"\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} ֎ ֎`)) {\r\n        diarsaba.get(`${dataset.parent} ֎ ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} ֎ ֎`, chip);\r\n}",
+    "· ! abrir ƒ": "(dataset) => {\r\n    const rect = diarsaba.get(`${dataset.parent} ֎`).getBoundingClientRect();\r\n    const l_div = diarsaba.get(\"create list ƒ\")(\r\n        rect.left + rect.width + 10,\r\n        rect.top,\r\n        diarsaba.get(dataset.parent),\r\n        dataset.parent\r\n    );\r\n\r\n    if (diarsaba.get(`${dataset.parent} # ֎`)) {\r\n        diarsaba.get(`${dataset.parent} # ֎`).remove();\r\n    }\r\n\r\n    diarsaba.set(`${dataset.parent} # ֎`, l_div);\r\n}",
+    "· * ocultar ƒ": "(dataset) => {\r\n    const chip = diarsaba.get(`${dataset.parent} ֎`);\r\n    if (chip) {\r\n        diarsaba.get(`${dataset.parent} ֎`).remove();\r\n        diarsaba.delete(`${dataset.parent} ֎`);\r\n    } else {\r\n        diarsaba.get(`${dataset.parent} ֎ ֎`).remove();\r\n        diarsaba.delete(`${dataset.parent} ֎ ֎`);\r\n    }\r\n}",
+    "· ֎* ocultar ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎ ֎`).remove();\r\n    diarsaba.delete(`${dataset.parent} ֎ ֎`);\r\n}",
+    "eliminar elemento del dom ƒ": "(dataset) => {\r\n    diarsaba.get(`${dataset.parent} ֎`).remove();\r\n}",
+    "create ~ thread ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, []);\r\n}",
+    "create ƒ func ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, null);\r\n}",
+    "create ! action ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, []);\r\n}",
+    "create $ num ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, 0);\r\n}",
+    "create § text ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, \"\");\r\n}",
+    "create # list ƒ": "(name) => {\r\n    if (!diarsaba.get(`${name}`)) diarsaba.set(`${name}`, []);\r\n}",
+    "clear menus ƒ": "() => {\r\n    if (diarsaba.get(\"current menu\")) {\r\n        diarsaba.get(\"current menu\").remove();\r\n    }\r\n\r\n    if (diarsaba.get(\"current chip menu\")) {\r\n        diarsaba.get(\"current chip menu\").remove();\r\n    }\r\n}",
+    "modal input ƒ": "async (pre) => {\r\n    const createEl = (tag, props = {}) =>\r\n        Object.assign(document.createElement(tag), props);\r\n\r\n    const div = createEl(\"div\", { className: \"modal-content\" });\r\n    const input = createEl(\"input\", {\r\n        type: \"text\",\r\n        value: pre || \"\",\r\n        spellcheck: false,\r\n    });\r\n\r\n    const buttonContainer = createEl(\"div\", { className: \"modal-buttons\" });\r\n\r\n    [\"Cancel\", \"Continue\"].forEach((text) => {\r\n        const btn = createEl(\"button\", { textContent: text });\r\n        btn.dataset.modal = text.toLowerCase();\r\n        btn.onclick = () => {\r\n            div.remove();\r\n            this.nombreInputPromise?.(\r\n                text === \"Cancel\" ? null : input.value.trim()\r\n            );\r\n        };\r\n        buttonContainer.append(btn);\r\n    });\r\n\r\n    div.append(input, buttonContainer);\r\n    document.body.append(div);\r\n    input.focus();\r\n\r\n    return await new Promise((resolve) => (this.nombreInputPromise = resolve));\r\n}",
+    "create list ƒ": "(x, y, list, parent) => {\r\n    const div = document.createElement(\"div\");\r\n    div.classList = \"context-menu\";\r\n\r\n    if (list.length == 0) {\r\n        div.innerHTML += `<span class=\"menu-item\">[0]</span>`;\r\n    } else {\r\n        for (const key in list) {\r\n            div.innerHTML += `<span class=\"menu-item\">[${key}] ${list[key]}</span>`;\r\n        }\r\n    }\r\n\r\n    div.style.left = `${x}px`;\r\n    div.style.top = `${y}px`;\r\n    div.dataset.parent = parent;\r\n    document.body.appendChild(div);\r\n    return div;\r\n}",
+    "create list menu ƒ": "(list, parent = \"\", current = \"\") => {\r\n    const div = document.createElement(\"div\");\r\n    div.classList = \"context-menu\";\r\n    for (const key of list) {\r\n        div.innerHTML += `<span class=\"menu-item\">${key}</span>`;\r\n    }\r\n    div.style.left = `${diarsaba.get(\"pointer x\")}px`;\r\n    div.style.top = `${diarsaba.get(\"pointer y\")}px`;\r\n\r\n    div.dataset.parent = parent;\r\n    div.dataset.current = current;\r\n    document.body.appendChild(div);\r\n    return div;\r\n}",
+    "create chip ƒ": "(x, y, text, parent = \"\", type = \"\") => {\r\n    const div = document.createElement(\"div\");\r\n    div.classList = \"object-name\";\r\n    div.textContent = text;\r\n    div.style.left = `${x}px`;\r\n    div.style.top = `${y}px`;\r\n    div.spellcheck = false;\r\n    div.dataset.parent = parent;\r\n    div.dataset.type = type;\r\n    document.body.appendChild(div);\r\n    return div;\r\n}"
+}
