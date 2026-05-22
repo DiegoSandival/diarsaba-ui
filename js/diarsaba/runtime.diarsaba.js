@@ -346,6 +346,14 @@ async function threads(e) {
     }
 }
 
+function functionToJsonText(fn) {
+    if (typeof fn !== "function") {
+        throw new TypeError("Se esperaba una función");
+    }
+
+    return String(fn).replace(/\r\n/g, "\n").trim();
+}
+
 const diarsaba = new Map();
 
 window.addEventListener("DOMContentLoaded", async () => {
