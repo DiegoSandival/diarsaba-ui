@@ -346,21 +346,11 @@ async function threads(e) {
     }
 }
 
-function functionToJsonText(fn) {
-    if (typeof fn !== "function") {
-        throw new TypeError("Se esperaba una función");
-    }
-
-    return String(fn).replace(/\r\n/g, "\n").trim();
-}
-
 const diarsaba = new Map();
 
 window.addEventListener("DOMContentLoaded", async () => {
-
     const response = await fetch("js/diarsaba/predefined_functions.json");
     const predefinedFunctions = await response.json();
-
     for (const [key, value] of Object.entries(predefinedFunctions)) {
         if (key.endsWith("ƒ")) {
             diarsaba.set(key, createFunction(value));
@@ -368,6 +358,8 @@ window.addEventListener("DOMContentLoaded", async () => {
             diarsaba.set(key, value);
         }
     }
-
     diarsaba.get("on start ƒ")();
 });
+
+
+
