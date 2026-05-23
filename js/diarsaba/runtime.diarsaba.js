@@ -346,19 +346,30 @@ async function threads(e) {
     }
 }
 
+
+
 const diarsaba = new Map();
 
 window.addEventListener("DOMContentLoaded", async () => {
+
     const response = await fetch("js/diarsaba/predefined_functions.json");
     const predefinedFunctions = await response.json();
+
     for (const [key, value] of Object.entries(predefinedFunctions)) {
         if (key.endsWith("ƒ")) {
             diarsaba.set(key, createFunction(value));
+        } else if (key.endsWith("{")) {
+            // el valor es un estilo CSS, lo aplicamos al documento
+            const style = document.createElement("style");
+            style.textContent = value;
+            document.head.appendChild(style);  
         } else {
             diarsaba.set(key, value);
         }
     }
+
     diarsaba.get("on start ƒ")();
+
 });
 
 
