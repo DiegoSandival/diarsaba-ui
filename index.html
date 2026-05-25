@@ -362,36 +362,6 @@
 
         const diarsaba = new Map();
 
-        // Override diarsaba.set to auto-create/update <style> tags for keys ending with '{'
-        (function() {
-            const originalSet = diarsaba.set.bind(diarsaba);
-            const styleIdFromKey = (k) => {
-                const base = String(k).replace(/\s*\{$/, "").trim();
-                return 'diarsaba-style-' + base.replace(/[^\w-]/g, '_').replace(/^_+|_+$/g, '');
-            };
-
-            diarsaba.set = (key, value) => {
-                originalSet(key, value);
-                try {
-                    if (typeof key === 'string' && key.endsWith('{')) {
-                        const id = styleIdFromKey(key);
-                        let el = document.getElementById(id);
-                        if (el) {
-                            el.textContent = typeof value === 'string' ? value : '';
-                        } else {
-                            el = document.createElement('style');
-                            el.id = id;
-                            el.textContent = typeof value === 'string' ? value : '';
-                            document.head.appendChild(el);
-                        }
-                    }
-                } catch (e) {
-                    console.error('diarsaba.set style handler error', e);
-                }
-                return diarsaba;
-            };
-        })();
-
         window.addEventListener("DOMContentLoaded", async () => {
 
             const response = await fetch("predefined_functions.json");
